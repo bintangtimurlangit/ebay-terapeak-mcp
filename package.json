@@ -1,0 +1,27 @@
+{
+  "name": "ebay-terapeak-mcp",
+  "version": "0.2.0",
+  "description": "MCP server + CLI that searches eBay Terapeak (Seller Hub Product Research) sold & active listings via a persistent Playwright session.",
+  "type": "module",
+  "bin": {
+    "ebay-terapeak-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "login": "npm run build && node dist/index.js login",
+    "start": "npm run build && node dist/index.js",
+    "dev": "tsc -w"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "playwright": "^1.49.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}
