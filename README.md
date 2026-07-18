@@ -33,7 +33,20 @@ anti-bot cookies itself — which is what avoids constant cookie-staleness.
 
 ## Setup
 
+### From npm (recommended)
+
 ```bash
+npm install -g @bintangtimurlangit/ebay-terapeak-mcp   # downloads the CloakBrowser binary (~200 MB, cached)
+```
+
+Puts the **`ebay-terapeak-mcp`** command on your PATH (it doubles as the CLI and,
+with `login`, the one-time sign-in). Or run without installing:
+`npx -y @bintangtimurlangit/ebay-terapeak-mcp`.
+
+### From source
+
+```bash
+git clone https://github.com/bintangtimurlangit/ebay-terapeak-mcp.git
 cd ebay-terapeak-mcp
 npm install          # also downloads the CloakBrowser binary (~200 MB, cached)
 npm run build
@@ -45,7 +58,7 @@ Sign into eBay once. This opens a real browser window and saves the session to a
 persistent profile (`~/.ebay-research-mcp/profile` by default).
 
 ```bash
-npm run login
+ebay-terapeak-mcp login      # global install — or, from a source checkout:  npm run login
 ```
 
 Sign in (complete any 2FA) and wait until the **"Research products"** page loads.
@@ -53,14 +66,14 @@ The window closes itself once login is detected.
 
 > The login step and the running server both use the same browser profile, and a
 > profile can only be open in one browser at a time. **Stop the MCP server before
-> running `npm run login`.**
+> running login.**
 
 ## Use with Claude Code
 
-Register the server (point it at the built entry file):
+Register the server:
 
 ```bash
-claude mcp add ebay-terapeak -- node /ABSOLUTE/PATH/TO/ebay-terapeak-mcp/dist/index.js
+claude mcp add ebay-terapeak -- npx -y @bintangtimurlangit/ebay-terapeak-mcp
 ```
 
 Or add it to your MCP config JSON:
@@ -69,12 +82,14 @@ Or add it to your MCP config JSON:
 {
   "mcpServers": {
     "ebay-terapeak": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/ebay-terapeak-mcp/dist/index.js"]
+      "command": "npx",
+      "args": ["-y", "@bintangtimurlangit/ebay-terapeak-mcp"]
     }
   }
 }
 ```
+
+After a global install you can instead use `"command": "ebay-terapeak-mcp"`, `"args": []`. From a source checkout, use `"command": "node"`, `"args": ["/ABSOLUTE/PATH/TO/ebay-terapeak-mcp/dist/index.js"]`.
 
 Then ask, e.g.: _"Search eBay sold listings for 'nintendo switch oled' over the
 last 90 days."_

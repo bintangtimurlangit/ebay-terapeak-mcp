@@ -1,9 +1,12 @@
 {
-  "name": "ebay-terapeak-mcp",
+  "name": "@bintangtimurlangit/ebay-terapeak-mcp",
   "version": "0.2.0",
-  "description": "MCP server + CLI that searches eBay Terapeak (Seller Hub Product Research) sold & active listings via a persistent Playwright session.",
+  "description": "MCP server + CLI that searches eBay Terapeak (Seller Hub Product Research) sold & active listings via a persistent CloakBrowser session.",
   "license": "MIT",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bintangtimurlangit/ebay-terapeak-mcp.git"
@@ -35,7 +38,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "npm run build"
   },
   "lint-staged": {
     "*.{ts,js,json,md,yml,yaml}": "prettier --write",
