@@ -13,7 +13,7 @@
  *   - Client-side (the endpoint ignores/breaks on these, so we do them here):
  *       exclude terms (`-term` returns zero rows), sort, de-duplication
  */
-import { EbaySession } from "./browser.js";
+import { EbaySession } from './browser.js';
 import {
   splitModules,
   parseAggregates,
@@ -22,21 +22,15 @@ import {
   type Aggregates,
   type Listing,
   type Pagination,
-} from "./parse.js";
+} from './parse.js';
 
 const PAGE_LIMIT = 50; // eBay's max results per page on this endpoint
 const DAY_MS = 86_400_000;
 
-export type Tab = "SOLD" | "ACTIVE";
-export type Condition = "new" | "used" | number;
-export type Format = "all" | "auction" | "fixed";
-export type SortKey =
-  | "best_match"
-  | "sales"
-  | "units"
-  | "price"
-  | "price_asc"
-  | "recent";
+export type Tab = 'SOLD' | 'ACTIVE';
+export type Condition = 'new' | 'used' | number;
+export type Format = 'all' | 'auction' | 'fixed';
+export type SortKey = 'best_match' | 'sales' | 'units' | 'price' | 'price_asc' | 'recent';
 
 export interface SearchOpts {
   keywords: string;
@@ -117,9 +111,9 @@ export interface SearchResult {
 /** Map a condition option to eBay's conditionId. Unknown -> undefined (no filter). */
 function conditionId(c: Condition | undefined): number | undefined {
   if (c == null) return undefined;
-  if (typeof c === "number") return c;
-  if (c === "new") return 1000;
-  if (c === "used") return 3000;
+  if (typeof c === 'number') return c;
+  if (c === 'new') return 1000;
+  if (c === 'used') return 3000;
   return undefined;
 }
 
@@ -131,8 +125,8 @@ function filterParams(opts: SearchOpts): Record<string, string | number> {
   if (opts.minPrice != null) f.minPrice = opts.minPrice;
   if (opts.maxPrice != null) f.maxPrice = opts.maxPrice;
   // format=ALL returns zero rows on this endpoint, so "all" means omit the param.
-  if (opts.format === "auction") f.format = "AUCTION";
-  else if (opts.format === "fixed") f.format = "FIXED_PRICE";
+  if (opts.format === 'auction') f.format = 'AUCTION';
+  else if (opts.format === 'fixed') f.format = 'FIXED_PRICE';
   return f;
 }
 
@@ -143,19 +137,16 @@ function effectiveKeywords(opts: SearchOpts): string {
   return kw.startsWith('"') && kw.endsWith('"') ? kw : `"${kw}"`;
 }
 
-function buildQuery(
-  params: Record<string, string | number>,
-  modules: string[],
-): string {
+function buildQuery(params: Record<string, string | number>, modules: string[]): string {
   const sp = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) sp.set(k, String(v));
-  for (const m of modules) sp.append("modules", m);
+  for (const m of modules) sp.append('modules', m);
   return sp.toString();
 }
 
 function matchesExclude(l: Listing, terms: string[]): boolean {
   if (terms.length === 0) return false;
-  const hay = `${l.title} ${l.extendedTitle ?? ""}`.toLowerCase();
+  const hay = `${l.title} ${l.extendedTitle ?? ''}`.toLowerCase();
   return terms.some((t) => hay.includes(t));
 }
 
@@ -216,15 +207,12 @@ function project(l: Listing, detail: boolean): OutRow {
  * client-side filters (exclude/dedup) or run out of pages. Aggregates are
  * fetched once, from the first page, and reflect the *server-side* filters only.
  */
-export async function runSearch(
-  opts: SearchOpts,
-  session: EbaySession,
-): Promise<SearchResult> {
+export async function runSearch(opts: SearchOpts, session: EbaySession): Promise<SearchResult> {
   const endDate = Date.now();
   const startDate = endDate - opts.days * DAY_MS;
-  const tz = process.env.EBAY_MCP_TZ || "UTC";
+  const tz = process.env.EBAY_MCP_TZ || 'UTC';
   const exclude = (opts.exclude ?? []).map((t) => t.toLowerCase()).filter(Boolean);
-  const sort: SortKey = opts.sort ?? "best_match";
+  const sort: SortKey = opts.sort ?? 'best_match';
   const filters = filterParams(opts);
   const keywords = effectiveKeywords(opts);
 
@@ -255,17 +243,15 @@ export async function runSearch(
       ...filters,
     };
     const modules =
-      page === 0
-        ? ["aggregates", "searchResults", "resultsHeader"]
-        : ["searchResults"];
+      page === 0 ? ['aggregates', 'searchResults', 'resultsHeader'] : ['searchResults'];
 
     const body = await session.fetchSearch(buildQuery(base, modules));
     const mods = splitModules(body);
 
-    if (!aggregates && mods["aggregates"]) {
-      aggregates = parseAggregates(mods["aggregates"]);
+    if (!aggregates && mods['aggregates']) {
+      aggregates = parseAggregates(mods['aggregates']);
     }
-    const sr = mods["searchResults"];
+    const sr = mods['searchResults'];
     if (!sr) break;
 
     const rows = parseResults(sr);
@@ -289,13 +275,17 @@ export async function runSearch(
   const ordered = sortRows(kept, sort).slice(0, opts.summaryOnly ? 0 : opts.maxResults);
 
   if (Object.keys(filters).length || opts.exact) {
-    notes.push("Aggregates reflect the server-side filters (condition/price/format/exact phrase).");
+    notes.push('Aggregates reflect the server-side filters (condition/price/format/exact phrase).');
   }
   if (exclude.length) {
-    notes.push(`Excluded ${exclude.length} term(s) client-side; aggregate totals still include them.`);
+    notes.push(
+      `Excluded ${exclude.length} term(s) client-side; aggregate totals still include them.`,
+    );
   }
-  if (sort !== "best_match") {
-    notes.push(`Rows sorted by '${sort}' within the ${kept.length} retrieved (not a full-catalog sort — raise max_results for a wider ranking).`);
+  if (sort !== 'best_match') {
+    notes.push(
+      `Rows sorted by '${sort}' within the ${kept.length} retrieved (not a full-catalog sort — raise max_results for a wider ranking).`,
+    );
   }
 
   return {

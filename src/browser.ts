@@ -1,5 +1,5 @@
 /**
- * Persistent Playwright session against eBay Seller Hub.
+ * Persistent CloakBrowser session against eBay Seller Hub.
  *
  * The whole point: rather than scraping cookies and replaying them with a plain
  * HTTP client (which eBay's bot detection — Akamai + perfdrive — flags), we keep
@@ -7,44 +7,46 @@
  * page. That request carries every session cookie, satisfies bot detection, and
  * lets the real browser rotate the short-lived anti-bot cookies itself. That is
  * what defeats the cookie-staleness problem.
+ *
+ * We drive CloakBrowser (a fingerprint-patched Chromium) rather than vanilla
+ * Playwright so the same anti-detection profile is shared across these servers.
+ * Playwright is kept only for its context/page TYPES — CloakBrowser's context is
+ * API-compatible.
  */
-import { chromium, type BrowserContext, type Page } from "playwright";
-import os from "node:os";
-import path from "node:path";
+import { launchPersistentContext } from 'cloakbrowser';
+import type { BrowserContext, Page } from 'playwright';
+import os from 'node:os';
+import path from 'node:path';
 
-const RESEARCH_URL =
-  "https://www.ebay.com/sh/research?marketplace=EBAY-US&tabName=SOLD";
-const SEARCH_API = "https://www.ebay.com/sh/research/api/search";
+const RESEARCH_URL = 'https://www.ebay.com/sh/research?marketplace=EBAY-US&tabName=SOLD';
+const SEARCH_API = 'https://www.ebay.com/sh/research/api/search';
 
 /** Where the logged-in browser profile lives (override with EBAY_MCP_PROFILE). */
 export const PROFILE_DIR =
-  process.env.EBAY_MCP_PROFILE ||
-  path.join(os.homedir(), ".ebay-research-mcp", "profile");
+  process.env.EBAY_MCP_PROFILE || path.join(os.homedir(), '.ebay-research-mcp', 'profile');
 
 /** Thrown when the session isn't authenticated (or got logged out). */
 export class NotLoggedInError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "NotLoggedInError";
+    this.name = 'NotLoggedInError';
   }
 }
 
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
 async function launch(headless: boolean): Promise<BrowserContext> {
-  const opts = {
+  // CloakBrowser ships its own fingerprint-patched Chromium, so there is no
+  // separate `playwright install` step and no Chrome-channel fallback to manage.
+  return (await launchPersistentContext({
+    userDataDir: PROFILE_DIR,
     headless,
+    userAgent: USER_AGENT,
     viewport: { width: 1280, height: 900 },
-    args: ["--disable-blink-features=AutomationControlled"],
-  };
-  // Prefer the real Chrome channel (better against bot detection); fall back to
-  // Playwright's bundled Chromium if Chrome isn't installed.
-  try {
-    return await chromium.launchPersistentContext(PROFILE_DIR, {
-      channel: "chrome",
-      ...opts,
-    });
-  } catch {
-    return await chromium.launchPersistentContext(PROFILE_DIR, opts);
-  }
+    humanize: true,
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+  })) as unknown as BrowserContext;
 }
 
 export class EbaySession {
@@ -83,13 +85,13 @@ export class EbaySession {
   private async ensureReady(): Promise<void> {
     await this.start();
     const page = this.page!;
-    if (!page.url().startsWith("https://www.ebay.com/sh/research")) {
-      await page.goto(RESEARCH_URL, { waitUntil: "domcontentloaded" });
+    if (!page.url().startsWith('https://www.ebay.com/sh/research')) {
+      await page.goto(RESEARCH_URL, { waitUntil: 'domcontentloaded' });
     }
-    if (page.url().includes("signin.ebay.com")) {
+    if (page.url().includes('signin.ebay.com')) {
       throw new NotLoggedInError(
-        "eBay session is not authenticated. Run `npm run login` (with the MCP " +
-          "server stopped) to sign in, then retry.",
+        'eBay session is not authenticated. Run `npm run login` (with the MCP ' +
+          'server stopped) to sign in, then retry.',
       );
     }
   }
@@ -98,8 +100,8 @@ export class EbaySession {
   async isLoggedIn(): Promise<boolean> {
     return this.run(async () => {
       await this.start();
-      await this.page!.goto(RESEARCH_URL, { waitUntil: "domcontentloaded" });
-      return !this.page!.url().includes("signin.ebay.com");
+      await this.page!.goto(RESEARCH_URL, { waitUntil: 'domcontentloaded' });
+      return !this.page!.url().includes('signin.ebay.com');
     });
   }
 
@@ -113,21 +115,21 @@ export class EbaySession {
       const url = `${SEARCH_API}?${queryString}`;
       const res = await this.page!.evaluate(async (u: string) => {
         const r = await fetch(u, {
-          headers: { "x-requested-with": "XMLHttpRequest", accept: "*/*" },
-          credentials: "include",
+          headers: { 'x-requested-with': 'XMLHttpRequest', accept: '*/*' },
+          credentials: 'include',
         });
         return {
           status: r.status,
-          contentType: r.headers.get("content-type") ?? "",
+          contentType: r.headers.get('content-type') ?? '',
           body: await r.text(),
         };
       }, url);
 
-      if (!res.contentType.includes("application/json")) {
+      if (!res.contentType.includes('application/json')) {
         throw new NotLoggedInError(
           `eBay returned a non-JSON response (HTTP ${res.status}). The session ` +
-            "is likely stale or bot detection triggered. Run `npm run login` to " +
-            "refresh it.",
+            'is likely stale or bot detection triggered. Run `npm run login` to ' +
+            'refresh it.',
         );
       }
       return res.body;
@@ -151,25 +153,22 @@ export class EbaySession {
 export async function loginInteractive(): Promise<void> {
   const ctx = await launch(false);
   const page = ctx.pages()[0] ?? (await ctx.newPage());
-  await page.goto(RESEARCH_URL, { waitUntil: "domcontentloaded" });
+  await page.goto(RESEARCH_URL, { waitUntil: 'domcontentloaded' });
 
   console.error(
-    "\nA browser window has opened.\n" +
-      "  1. Sign into your eBay account (complete any 2FA).\n" +
+    '\nA browser window has opened.\n' +
+      '  1. Sign into your eBay account (complete any 2FA).\n' +
       "  2. Wait until the 'Research products' page loads.\n" +
-      "Waiting up to 5 minutes for sign-in...\n",
+      'Waiting up to 5 minutes for sign-in...\n',
   );
 
   const deadline = Date.now() + 5 * 60 * 1000;
   let ok = false;
   while (Date.now() < deadline) {
     const url = page.url();
-    if (
-      url.startsWith("https://www.ebay.com/sh/research") &&
-      !url.includes("signin.ebay.com")
-    ) {
+    if (url.startsWith('https://www.ebay.com/sh/research') && !url.includes('signin.ebay.com')) {
       const hasResearch = await page
-        .getByRole("heading", { name: "Research products" })
+        .getByRole('heading', { name: 'Research products' })
         .count()
         .catch(() => 0);
       if (hasResearch) {
@@ -182,13 +181,11 @@ export async function loginInteractive(): Promise<void> {
 
   if (ok) {
     console.error(
-      "\n✅ Login detected and saved to the profile. You can close this window.\n" +
-        "   The MCP server will now reuse this session.\n",
+      '\n✅ Login detected and saved to the profile. You can close this window.\n' +
+        '   The MCP server will now reuse this session.\n',
     );
   } else {
-    console.error(
-      "\n⚠️  Timed out waiting for sign-in. Re-run `npm run login` and try again.\n",
-    );
+    console.error('\n⚠️  Timed out waiting for sign-in. Re-run `npm run login` and try again.\n');
   }
   await ctx.close();
 }

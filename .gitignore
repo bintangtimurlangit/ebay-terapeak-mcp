@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.env
 # Personal, machine-specific Claude Code permissions (not for sharing)
 .claude/settings.local.json
 # Playwright browser profile (contains your eBay session — never commit)

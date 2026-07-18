@@ -8,25 +8,25 @@
 
 /** Join the plain text out of a TextualDisplay / TextSpan wrapper. */
 export function textOf(node: any): string {
-  if (!node || typeof node !== "object") return "";
+  if (!node || typeof node !== 'object') return '';
   const spans = node.textSpans ?? [];
   return spans
-    .map((s: any) => (s && typeof s.text === "string" ? s.text : ""))
-    .join("")
+    .map((s: any) => (s && typeof s.text === 'string' ? s.text : ''))
+    .join('')
     .trim();
 }
 
 /** "$5,478.54" -> 5478.54 ; "-" / "" -> null. Handles leading +, $, commas. */
 export function parseMoney(s: string): number | null {
   if (!s) return null;
-  const m = s.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+  const m = s.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
   return m ? parseFloat(m[0]) : null;
 }
 
 /** "247,663" -> 247663 ; "-" -> null. */
 export function parseIntSafe(s: string): number | null {
   if (!s) return null;
-  const m = s.replace(/,/g, "").match(/-?\d+/);
+  const m = s.replace(/,/g, '').match(/-?\d+/);
   return m ? parseInt(m[0], 10) : null;
 }
 
@@ -39,7 +39,7 @@ export function parsePercent(s: string): number | null {
 /** Normalize eBay protocol-relative image URLs ("//i.ebayimg.com/...") . */
 function normalizeUrl(u?: string | null): string | null {
   if (!u) return null;
-  return u.startsWith("//") ? "https:" + u : u;
+  return u.startsWith('//') ? 'https:' + u : u;
 }
 
 /**
@@ -53,7 +53,7 @@ export function splitModules(body: string): Record<string, any> {
     if (!t) continue;
     try {
       const o = JSON.parse(t);
-      const name = o?.meta?.name ?? o?._type ?? "unknown";
+      const name = o?.meta?.name ?? o?._type ?? 'unknown';
       mods[name] = o;
     } catch {
       /* ignore non-JSON fragments */
@@ -85,14 +85,14 @@ export function parseAggregates(mod: any): Aggregates {
     }
   }
   return {
-    avgSoldPrice: parseMoney(raw["Avg sold price"] ?? ""),
-    soldPriceRange: raw["Sold price range"] ?? null,
-    avgShipping: parseMoney(raw["Avg shipping"] ?? ""),
-    freeShippingPct: parsePercent(raw["Free shipping"] ?? ""),
-    totalSold: parseIntSafe(raw["Total sold"] ?? ""),
-    sellThrough: raw["Sell-through"] ?? null,
-    totalSellers: parseIntSafe(raw["Total sellers"] ?? ""),
-    totalItemSales: parseMoney(raw["Total item sales"] ?? ""),
+    avgSoldPrice: parseMoney(raw['Avg sold price'] ?? ''),
+    soldPriceRange: raw['Sold price range'] ?? null,
+    avgShipping: parseMoney(raw['Avg shipping'] ?? ''),
+    freeShippingPct: parsePercent(raw['Free shipping'] ?? ''),
+    totalSold: parseIntSafe(raw['Total sold'] ?? ''),
+    sellThrough: raw['Sell-through'] ?? null,
+    totalSellers: parseIntSafe(raw['Total sellers'] ?? ''),
+    totalItemSales: parseMoney(raw['Total item sales'] ?? ''),
     raw,
   };
 }
@@ -144,9 +144,7 @@ export function parseResults(mod: any): Listing[] {
       itemId,
       title: textOf(listing.title),
       extendedTitle: listing?.extendedTitle?.value ?? null,
-      url:
-        listing?.title?.action?.URL ??
-        (itemId ? `https://www.ebay.com/itm/${itemId}` : null),
+      url: listing?.title?.action?.URL ?? (itemId ? `https://www.ebay.com/itm/${itemId}` : null),
       imageUrl: normalizeUrl(listing?.image?.URL),
       moreImages: Array.isArray(listing.moreImages)
         ? listing.moreImages
@@ -168,7 +166,7 @@ export function parseResults(mod: any): Listing[] {
       listingPriceText: textOf(priceActive.listingPrice) || null,
       listingShipping: parseMoney(textOf(priceActive.listingShipping)),
       watchers: parseIntSafe(textOf(row.watchers)),
-      promoted: promotedText ? promotedText !== "-" : null,
+      promoted: promotedText ? promotedText !== '-' : null,
       startDate: textOf(row.startDate) || null,
       // Both tabs
       bids: parseIntSafe(textOf(row.bids)),
@@ -187,7 +185,7 @@ export function parsePagination(mod: any): Pagination {
   const p = mod?.pagination ?? {};
   return {
     summary: textOf(p.summary) || null,
-    currentPage: typeof p.currentPageNum === "number" ? p.currentPageNum : null,
+    currentPage: typeof p.currentPageNum === 'number' ? p.currentPageNum : null,
     hasNext: p?.next ? p.next.disabled === false : false,
   };
 }

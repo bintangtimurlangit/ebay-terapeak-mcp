@@ -1,0 +1,54 @@
+name: Bug report
+description: A tool or CLI command returns an error, wrong data, or stops working
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. This reads eBay's **unofficial** Seller Hub research endpoint through a logged-in browser, so a tool can break when eBay changes the endpoint or its bot detection. Details help a lot.
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool / command?
+      options:
+        - search_sold_listings
+        - search_active_listings
+        - session_status
+        - CLI (node dist/index.js search …)
+        - Login / session
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you call, what did you expect, and what did you get? Paste the response/output (redact anything private).
+    validations:
+      required: true
+  - type: input
+    id: args
+    attributes:
+      label: Arguments / flags used
+      placeholder: 'e.g. search "nintendo switch oled" --sold --exact --days 90'
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: 'e.g. 20.11.0 (node -v)'
+  - type: dropdown
+    id: headless
+    attributes:
+      label: Headless mode
+      options:
+        - Headless (EBAY_MCP_HEADLESS=1, default)
+        - Headed (EBAY_MCP_HEADLESS=0)
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I ran `npm run login` and confirmed the session is active (`session_status`)
+        - label: I searched existing issues for a duplicate

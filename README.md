@@ -1,12 +1,17 @@
 # ebay-terapeak-mcp
 
+[![license](https://img.shields.io/github/license/bintangtimurlangit/ebay-terapeak-mcp?style=flat-square)](./LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/bintangtimurlangit/ebay-terapeak-mcp/ci.yml?branch=main&style=flat-square)](https://github.com/bintangtimurlangit/ebay-terapeak-mcp/actions)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-ebay--terapeak--mcp-24292f?style=flat-square&logo=github)](https://github.com/bintangtimurlangit/ebay-terapeak-mcp)
+
 An MCP server **and CLI** that lets an AI agent (Claude, etc.) — or you, from the
 terminal — search eBay's **Terapeak "Product Research"** data (sold & active
 listings) without opening the Seller Hub UI.
 
 It wraps eBay's internal endpoint `GET /sh/research/api/search` and keeps a
-**persistent, logged-in Playwright browser session** alive so requests are made
-from inside a real browser. That carries your session cookies, passes eBay's bot
+**persistent, logged-in [CloakBrowser](https://github.com/CloakHQ/cloakbrowser)
+session** (a fingerprint-patched Chromium) alive so requests are made from inside
+a real browser. That carries your session cookies, passes eBay's bot
 detection (Akamai + perfdrive), and lets the browser rotate the short-lived
 anti-bot cookies itself — which is what avoids constant cookie-staleness.
 
@@ -16,21 +21,21 @@ anti-bot cookies itself — which is what avoids constant cookie-staleness.
 > keep request volume reasonable. For a supported alternative, see eBay's
 > **Marketplace Insights API**.
 
+**Full reference:** [Documentation](./docs/README.md) · **Changelog:** [CHANGELOG.md](./CHANGELOG.md) · **Versioning & releases:** [docs/RELEASES.md](./docs/RELEASES.md)
+
 ---
 
 ## Requirements
 
 - Node.js 18+ (tested on v24)
-- Google Chrome installed (preferred), or the bundled Chromium
-  (`npx playwright install chromium`)
+- A display (or `xvfb` on a headless server) — the session runs a real browser
 - An eBay account with access to Seller Hub → Research
 
 ## Setup
 
 ```bash
 cd ebay-terapeak-mcp
-npm install
-npx playwright install chromium   # optional fallback; Chrome is used if present
+npm install          # also downloads the CloakBrowser binary (~200 MB, cached)
 npm run build
 ```
 
@@ -71,34 +76,44 @@ Or add it to your MCP config JSON:
 }
 ```
 
-Then ask, e.g.: *"Search eBay sold listings for 'nintendo switch oled' over the
-last 90 days."*
+Then ask, e.g.: _"Search eBay sold listings for 'nintendo switch oled' over the
+last 90 days."_
 
 ## Tools
 
-| Tool | Purpose |
-|------|---------|
-| `search_sold_listings` | Sold-listing research: aggregate stats + per-listing rows. |
-| `search_active_listings` | Same for currently-active listings. |
-| `session_status` | Report whether the browser profile is still logged in. |
+| Tool                     | Description                                                |
+| ------------------------ | ---------------------------------------------------------- |
+| `search_sold_listings`   | Sold-listing research: aggregate stats + per-listing rows. |
+| `search_active_listings` | Same for currently-active listings.                        |
+| `session_status`         | Report whether the browser profile is still logged in.     |
+
+### Tool annotations
+
+Per the [MCP annotations spec](https://modelcontextprotocol.io/) — all tools are read-only, with no side effects.
+
+| Tool                     | Read-only | Idempotent | Destructive |
+| ------------------------ | :-------: | :--------: | :---------: |
+| `search_sold_listings`   |     ✓     |     ✓      |      –      |
+| `search_active_listings` |     ✓     |     ✓      |      –      |
+| `session_status`         |     ✓     |     ✓      |      –      |
 
 ### Parameters (both search tools)
 
-| Param | Default | Notes |
-|-------|---------|-------|
-| `keywords` | — | Search terms or a product id (MPN/UPC/EPID/EAN/ISBN). |
-| `exact` | `false` | Quote the phrase so eBay matches it exactly (big noise cut). |
-| `exclude` | `[]` | Terms to drop from results (client-side title match). |
-| `condition` | — | `new` or `used` (server-side). |
-| `min_price` / `max_price` | — | Price range filter (server-side). |
-| `format` | `all` | `auction`, `fixed`, or `all` (server-side). |
-| `sort` | `best_match` | `sales`, `units`, `price`, `price_asc`, `recent`, `best_match`. |
-| `summary_only` | `false` | Return only aggregate stats, no rows. |
-| `detail` | `false` | Include heavy fields (`extendedTitle`, `moreImages`). |
-| `days` | `90` | Lookback window in days (max 1095 = 3 years). |
-| `category_id` | `0` | eBay category id; `0` = all. |
-| `max_results` | `50` | Listings to return; paginated 50/page (max 500). |
-| `marketplace` | `EBAY-US` | e.g. `EBAY-US`, `EBAY-GB`, `EBAY-DE`. |
+| Param                     | Default      | Notes                                                           |
+| ------------------------- | ------------ | --------------------------------------------------------------- |
+| `keywords`                | —            | Search terms or a product id (MPN/UPC/EPID/EAN/ISBN).           |
+| `exact`                   | `false`      | Quote the phrase so eBay matches it exactly (big noise cut).    |
+| `exclude`                 | `[]`         | Terms to drop from results (client-side title match).           |
+| `condition`               | —            | `new` or `used` (server-side).                                  |
+| `min_price` / `max_price` | —            | Price range filter (server-side).                               |
+| `format`                  | `all`        | `auction`, `fixed`, or `all` (server-side).                     |
+| `sort`                    | `best_match` | `sales`, `units`, `price`, `price_asc`, `recent`, `best_match`. |
+| `summary_only`            | `false`      | Return only aggregate stats, no rows.                           |
+| `detail`                  | `false`      | Include heavy fields (`extendedTitle`, `moreImages`).           |
+| `days`                    | `90`         | Lookback window in days (max 1095 = 3 years).                   |
+| `category_id`             | `0`          | eBay category id; `0` = all.                                    |
+| `max_results`             | `50`         | Listings to return; paginated 50/page (max 500).                |
+| `marketplace`             | `EBAY-US`    | e.g. `EBAY-US`, `EBAY-GB`, `EBAY-DE`.                           |
 
 ### Filters: server-side vs client-side
 
@@ -106,11 +121,11 @@ The endpoint honors some refinements as query params and ignores others. Which
 is which was verified empirically (by diffing result counts against the live
 endpoint), not assumed:
 
-- **Server-side** (narrows the data *and* the aggregate stats): `exact` phrase,
+- **Server-side** (narrows the data _and_ the aggregate stats): `exact` phrase,
   `condition` (`conditionId`), `min_price`/`max_price` (`minPrice`/`maxPrice`),
   `format` (`AUCTION`/`FIXED_PRICE`).
 - **Client-side** (applied here after fetch; aggregates still reflect the
-  unfiltered-by-these market): `exclude` (the endpoint returns *zero* rows for
+  unfiltered-by-these market): `exclude` (the endpoint returns _zero_ rows for
   `-term` exclusion), `sort`, and de-duplication of repeated rows.
 
 Sorting orders the rows actually retrieved (up to `max_results`), so raise
@@ -191,11 +206,11 @@ the full structured result; otherwise a compact table is printed.
 
 ## Configuration (env vars)
 
-| Var | Default | Purpose |
-|-----|---------|---------|
-| `EBAY_MCP_PROFILE` | `~/.ebay-research-mcp/profile` | Browser profile dir (holds your session). |
-| `EBAY_MCP_HEADLESS` | `1` | Set `0` to run headed if bot detection blocks headless. |
-| `EBAY_MCP_TZ` | `UTC` | Timezone string sent to eBay (e.g. `Asia/Jakarta`). |
+| Var                 | Default                        | Purpose                                                 |
+| ------------------- | ------------------------------ | ------------------------------------------------------- |
+| `EBAY_MCP_PROFILE`  | `~/.ebay-research-mcp/profile` | Browser profile dir (holds your session).               |
+| `EBAY_MCP_HEADLESS` | `1`                            | Set `0` to run headed if bot detection blocks headless. |
+| `EBAY_MCP_TZ`       | `UTC`                          | Timezone string sent to eBay (e.g. `Asia/Jakarta`).     |
 
 ## Troubleshooting
 
@@ -218,3 +233,25 @@ src/
 reference/
   ebay_terapeak.py   standalone cookie-replay script (no browser) — reference only
 ```
+
+## Development
+
+Lint, format, typecheck, and build with `npm run lint`, `npm run format`, `npm run typecheck`, and `npm run build`. Full guide: **[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)**.
+
+## Contributing & security
+
+[CONTRIBUTING.md](./CONTRIBUTING.md) · [SECURITY.md](./SECURITY.md) · [Code of Conduct](./CODE_OF_CONDUCT.md)
+
+## License
+
+[MIT](./LICENSE)
+
+---
+
+## Disclaimer
+
+This is an **unofficial** project. It is **not affiliated with, authorized, maintained, sponsored, or endorsed by eBay Inc.**
+
+It drives a **private endpoint** intended for the Seller Hub web app via your own logged-in session; it is not an eBay-supported API and can break if eBay changes the endpoint or its bot detection. For a supported alternative, see eBay's **Marketplace Insights API**. It reads only research data your account can already access and performs no account actions.
+
+You are responsible for using this software in compliance with [eBay's User Agreement](https://www.ebay.com/help/policies/member-behaviour-policies/user-agreement) and applicable law. Keep request volume reasonable. All product names, logos, and brands are property of their respective owners.

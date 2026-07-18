@@ -2,26 +2,74 @@
   "name": "ebay-terapeak-mcp",
   "version": "0.2.0",
   "description": "MCP server + CLI that searches eBay Terapeak (Seller Hub Product Research) sold & active listings via a persistent Playwright session.",
+  "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bintangtimurlangit/ebay-terapeak-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bintangtimurlangit/ebay-terapeak-mcp/issues"
+  },
+  "homepage": "https://github.com/bintangtimurlangit/ebay-terapeak-mcp#readme",
   "bin": {
     "ebay-terapeak-mcp": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    ".env.example",
+    "docs",
+    "CHANGELOG.md",
+    "LICENSE",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md"
   ],
   "scripts": {
     "build": "tsc",
     "login": "npm run build && node dist/index.js login",
     "start": "npm run build && node dist/index.js",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
   },
+  "lint-staged": {
+    "*.{ts,js,json,md,yml,yaml}": "prettier --write",
+    "*.ts": "eslint --fix"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ebay",
+    "terapeak",
+    "product-research",
+    "market-research",
+    "cli"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
+    "cloakbrowser": "^0.4.10",
     "playwright": "^1.49.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^9.17.0",
     "@types/node": "^22.10.0",
-    "typescript": "^5.7.0"
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.19.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
