@@ -1,5 +1,6 @@
 # ebay-terapeak-mcp
 
+[![npm](https://img.shields.io/npm/v/@bintangtimurlangit/ebay-terapeak-mcp?style=flat-square)](https://www.npmjs.com/package/@bintangtimurlangit/ebay-terapeak-mcp)
 [![license](https://img.shields.io/github/license/bintangtimurlangit/ebay-terapeak-mcp?style=flat-square)](./LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/bintangtimurlangit/ebay-terapeak-mcp/ci.yml?branch=main&style=flat-square)](https://github.com/bintangtimurlangit/ebay-terapeak-mcp/actions)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-ebay--terapeak--mcp-24292f?style=flat-square&logo=github)](https://github.com/bintangtimurlangit/ebay-terapeak-mcp)

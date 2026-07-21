@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-21
+
 ### Added
 
 - Standardized project scaffolding: `LICENSE` (MIT), `.editorconfig`, `.env.example`, ESLint + Prettier, Conventional Commits (commitlint), Husky pre-commit hooks, CI + release workflows, issue/PR templates, and a `docs/` guide set.
@@ -13,6 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 ### Changed
 
 - **Browser engine: switched from vanilla Playwright to [CloakBrowser](https://github.com/CloakHQ/cloakbrowser)** (a fingerprint-patched Chromium), aligning the anti-detection stack with the other browser-based MCP servers. CloakBrowser ships its own binary, so the separate `npx playwright install chromium` step is gone; `playwright` is retained only for its types. No tool or API changes.
+- Updated runtime and development dependencies, and standardized the npm trusted-publishing release workflow.
 
 ## [0.2.0] - 2026-07-06
 
@@ -22,5 +25,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 - **3 tools:** `search_sold_listings`, `search_active_listings`, `session_status`, with server-side and client-side filters (exact phrase, condition, price range, format, exclude, sort).
 - Structured response shape with aggregates + per-listing rows; compact-by-default rows (`detail: true` for heavy fields).
 
-[Unreleased]: https://github.com/bintangtimurlangit/ebay-terapeak-mcp/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bintangtimurlangit/ebay-terapeak-mcp/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/bintangtimurlangit/ebay-terapeak-mcp/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bintangtimurlangit/ebay-terapeak-mcp/releases/tag/v0.2.0
